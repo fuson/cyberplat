@@ -25,7 +25,7 @@ describe("Crypto", function() {
         
         console.log('signed message:', signed.toString());
         
-        assert.ok(signed.indexOf("END SIGNATURE") > 0);
+        assert.ok(signed.toString().indexOf("END SIGNATURE") > 0);
     }); 
     
 });
