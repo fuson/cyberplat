@@ -55,10 +55,12 @@ int rsaref_mpicpy(const unsigned char* src, int nsrc, unsigned char* dst, int nd
 void rsaref_dump(void *src, int nsrc);
 
 #if defined(_WIN32)
-#define vsnprintf	__vsnprintf
-#define snprintf	__snprintf
+	#if _MSC_VER <= 1600
+		#define vsnprintf	__vsnprintf
+		#define snprintf	__snprintf
+	#endif
 #else
-#define O_BINARY
+	#define O_BINARY
 #endif
 
 // memory management
