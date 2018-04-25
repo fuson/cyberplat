@@ -1,25 +1,24 @@
 building PHP extension for Unix
+=================================
+
+First build shared libipriv library as described in INSTALL file at the root directory of the archive and then install it at your system as follows
+
+cp libipriv.so /usr/lib/
+sudo ldconfig
+
+and then build PHP extension in current directory
 
 phpize
 ./configure --enable-ipriv
-
-then edit generated Makefile. Add " ../../../libipriv.a" to the last line, e.g.
-	$(LIBTOOL) --mode=link $(CC) $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS) $(LDFLAGS) -o $@ -export-dynamic -avoid-version -prefer-pic -module -rpath $(phplibdir) $(EXTRA_LDFLAGS) $(shared_objects_ipriv) $(IPRIV_SHARED_LIBADD) ../../../libipriv.a
-or change LDFLAGS to:
-LDFLAGS = -L../../../ -lipriv
-
-
 make
 sudo make install
 
 
-You can check that this extensions is working correctly
+Now you can check that this extensions is working correctly
 cd ../../
 php -d"extension=ipriv.so" test.php
 
 it should output something like
-
-
 
 Sign: 0
 
