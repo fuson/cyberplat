@@ -12,12 +12,18 @@ OPT_WITH_2048		= true		# enable 2048 bit keys
 OPT_EXCEPTIONS		= true
 OPT_DEBUG		= false
 
+STATICDIR = static
+SHAREDDIR = shared
+
 MAKE= nmake -fMakefile.win32
 CC	= cl
 AR	= lib
 RM	= del
 LINK	= link
-OPENSSL	= c:\openssl
+OPENSSL	= C:\lib\openssl-1.1.1d
+
+MAKE_STATICDIR = if not exist $(STATICDIR) ( mkdir $(STATICDIR) )
+MAKE_SHAREDDIR = if not exist $(STATICDIR) ( mkdir $(SHAREDDIR) )
 
 C_FLAGS	= /W3 /Iidea /Irfc6234 /I. /DIDEA32 /D_CRT_SECURE_NO_WARNINGS
 
@@ -28,7 +34,7 @@ OBJS = rsaref\rsa.obj rsaref\nn.obj rsaref\digit.obj rsaref\r_stdlib.obj rsaref\
 LIBS	= Advapi32.lib
 	
 !if "$(OPT_WINCRYPT)" == "true"
-OPT_RSAREF		= true		# нужен для подсчета недостающих чисел
+OPT_RSAREF		= true		# РЅСѓР¶РµРЅ РґР»СЏ РїРѕРґСЃС‡РµС‚Р° РЅРµРґРѕСЃС‚Р°СЋС‰РёС… С‡РёСЃРµР»
 !endif
 
 !if "$(OPT_OPENSSL)" == "true"
@@ -119,13 +125,18 @@ all2:
 openssl: static tests_openssl
 		
 static: $(OBJS)
+	$(MAKE_STATICDIR)
 	$(AR) /out:static\$(LIBNAME).lib $(OBJS)
 	$(RM) $(OBJS)
 
 shared: $(OBJS)
+	$(MAKE_SHAREDDIR)
 	$(LINK) /DLL /OUT:shared\$(LIBNAME).dll /IMPLIB:shared\$(LIBNAME).lib /DEF:libipriv.def $(OBJS) $(LIBS)
 	$(RM) $(OBJS)
 	$(RM) shared\$(LIBNAME).exp
+
+clean:
+	$(RM) $(OBJS)
 
 .c.obj:
 	$(CC) /c /nologo $(CFLAGS) /Fo$@ $<
