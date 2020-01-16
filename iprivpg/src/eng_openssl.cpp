@@ -45,7 +45,7 @@ static void convertNumber(unsigned char *in, int size, BIGNUM *out)
 
 }
 
-static void convertNumber2(BIGNUM *in, unsigned char *out, int size)
+static void convertNumber2(const BIGNUM * in, unsigned char * out, int size)
 {
 	int n = BN_num_bytes(in);
 
@@ -53,7 +53,7 @@ static void convertNumber2(BIGNUM *in, unsigned char *out, int size)
 	BN_bn2bin(in, out+size-n);
 }
 
-// если в системе есть /dev/urandom, то используется автоматически
+// пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ /dev/urandom, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 static void seedPRNG()
 {
 #ifdef _WIN32
@@ -71,14 +71,14 @@ static void seedPRNG()
 	RAND_seed(reqid, sizeof(reqid));
 }
 
-// если не задать, то будет спрашивать с терминала
+// пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 static int def_pass_cb(char *buf, int size, int rwflag, void *u)
 {
 	*buf = 0;
 	return 0;
 }
 
-// экспорт в PEM формат открытых и закрытых ключей
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ PEM пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 static int eng_openssl_pem_export(IPRIV_KEY *k, const char *phrase, char *dst, int ndst)
 {
 	if (!k || !k->key || k->eng!=IPRIV_ENGINE_OPENSSL || !dst || ndst<=0)
@@ -93,14 +93,14 @@ static int eng_openssl_pem_export(IPRIV_KEY *k, const char *phrase, char *dst, i
 		return CRYPT_ERR_OUT_OF_MEMORY;
 
 	if (k->type == IPRIV_KEY_TYPE_RSA_PUBLIC) {
-//		if (PEM_write_bio_RSAPublicKey(bio_out, rsa))	// PKCS#1 RSAPublicKey (2 числа)
-		if (PEM_write_bio_RSA_PUBKEY(bio_out, rsa))	// другой формат откр. ключа (SubjectPublicKeyInfo)
+//		if (PEM_write_bio_RSAPublicKey(bio_out, rsa))	// PKCS#1 RSAPublicKey (2 пїЅпїЅпїЅпїЅпїЅ)
+		if (PEM_write_bio_RSA_PUBKEY(bio_out, rsa))	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ (SubjectPublicKeyInfo)
 			rc = 0;
 	} else if (k->type == IPRIV_KEY_TYPE_RSA_SECRET) {
-		if (phrase && *phrase) {	// с шифрованием кодовой фразой алгоритмом DES3
+		if (phrase && *phrase) {	// пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ DES3
 			if (PEM_write_bio_RSAPrivateKey(bio_out, rsa, EVP_des_ede3_cbc(), 0, 0, 0, (void *) phrase))
 				rc = 0;
-		} else {	// без шифрования
+		} else {	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			if (PEM_write_bio_RSAPrivateKey(bio_out, rsa, 0, 0, 0, 0, 0))
 				rc = 0;
 		}
@@ -120,7 +120,7 @@ static int eng_openssl_pem_export(IPRIV_KEY *k, const char *phrase, char *dst, i
 	return rc;
 }
 
-// импорт из PEM ключей
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ PEM пїЅпїЅпїЅпїЅпїЅпїЅ
 static int eng_openssl_pem_import(IPRIV_KEY *k, const char *phrase, char *src, int nsrc)
 {
 	if (!k || k->eng!=IPRIV_ENGINE_OPENSSL || !src)
@@ -178,17 +178,22 @@ int eng_openssl_ctrl(int cmd, va_list ap)
 	
 		if(k && k->key)
 		{
+			const BIGNUM *n;
 	    	    RSA *rsa = (RSA *) k->key;
 		    if (rsa)
-			return BN_num_bits(rsa->n);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+				n = rsa->n;
+#else 
+				n = BN_new();
+			RSA_get0_key(rsa, &n, NULL, NULL);
+#endif	
+			return BN_num_bits(n);
 		}
                 return CRYPT_ERR_NOT_SUPPORT;
 
 	default:
 		return CRYPT_ERR_NOT_SUPPORT;
 	}
-
-	return 0;
 }
 
 int eng_openssl_secret_key_new(IPRIV_KEY_BODY *src, IPRIV_KEY *k)
@@ -201,25 +206,43 @@ int eng_openssl_secret_key_new(IPRIV_KEY_BODY *src, IPRIV_KEY *k)
 	if (!rsa)
 		return CRYPT_ERR_OUT_OF_MEMORY;
 
-	rsa->n = BN_new();
-	rsa->e = BN_new();
-	rsa->d = BN_new();
-	rsa->p = BN_new();
-	rsa->q = BN_new();
-	rsa->dmp1 = BN_new();
-	rsa->dmq1 = BN_new();
-	rsa->iqmp = BN_new();
-	if (!rsa->n || !rsa->e || !rsa->d || !rsa->p || !rsa->q || !rsa->dmp1 || !rsa->dmq1 || !rsa->iqmp) {
+	BIGNUM *n = BN_new();
+	BIGNUM *e = BN_new();
+	BIGNUM *d = BN_new();
+	BIGNUM *p = BN_new();
+	BIGNUM *q = BN_new();
+	BIGNUM *dmp1 = BN_new();
+	BIGNUM *dmq1 = BN_new();
+	BIGNUM *iqmp = BN_new();
+	
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	rsa->n = n;
+	rsa->e = e;
+	rsa->d = d; 
+	rsa->p = p;
+	rsa->q = q;
+	rsa->dmp1 = dmp1;
+	rsa->dmq1 = dmq1;
+	rsa->iqmp = iqmp;
+#else
+	RSA_set0_key(rsa, n, e, d);
+	RSA_set0_factors(rsa, p, q);
+	RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp);
+
+#endif
+
+	
+	if (!n || !e || !d || !p || !q || !dmp1 || !dmq1 || !iqmp) {
 		RSA_free(rsa);
 		return CRYPT_ERR_OUT_OF_MEMORY;
 	}
 
-	convertNumber(src->modulus, sizeof(src->modulus), rsa->n);
-	convertNumber(src->publicExponent, sizeof(src->publicExponent), rsa->e);
-	convertNumber(src->exponent, sizeof(src->exponent), rsa->d);
-	convertNumber(src->prime1, sizeof(src->prime1), rsa->q);	// перестановка !!
-	convertNumber(src->prime2, sizeof(src->prime2), rsa->p);
-	convertNumber(src->coefficient, sizeof(src->coefficient), rsa->iqmp);
+	convertNumber(src->modulus, sizeof(src->modulus), n);
+	convertNumber(src->publicExponent, sizeof(src->publicExponent), e);
+	convertNumber(src->exponent, sizeof(src->exponent), d);
+	convertNumber(src->prime1, sizeof(src->prime1), q);	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ !!
+	convertNumber(src->prime2, sizeof(src->prime2), p);
+	convertNumber(src->coefficient, sizeof(src->coefficient), iqmp);
 
 	ctx = BN_CTX_new();
 	if (!ctx) {
@@ -230,11 +253,11 @@ int eng_openssl_secret_key_new(IPRIV_KEY_BODY *src, IPRIV_KEY *k)
 	r1 = BN_CTX_get(ctx);
 	r2 = BN_CTX_get(ctx);
 
-	//подсчитать два дополнительных числа для ускорения процесса шифрования
-	BN_sub(r1, rsa->p, BN_value_one());
-	BN_sub(r2, rsa->q, BN_value_one());
-	BN_mod(rsa->dmp1, rsa->d, r1, ctx);
-	BN_mod(rsa->dmq1, rsa->d, r2, ctx);
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	BN_sub(r1, p, BN_value_one());
+	BN_sub(r2, q, BN_value_one());
+	BN_mod(dmp1, d, r1, ctx);
+	BN_mod(dmq1, d, r2, ctx);
 
 	BN_CTX_end(ctx);
 	BN_CTX_free(ctx);
@@ -266,11 +289,17 @@ int eng_openssl_public_key_new(IPRIV_KEY_BODY *src, IPRIV_KEY *k)
 	if (!rsa)
 		return CRYPT_ERR_OUT_OF_MEMORY;
 
-	rsa->n = BN_new();
-	rsa->e = BN_new();
+	BIGNUM * n = BN_new();
+	BIGNUM * e = BN_new();
 
-	convertNumber(src->modulus, sizeof(src->modulus), rsa->n);
-	convertNumber(src->publicExponent, sizeof(src->publicExponent), rsa->e);
+	convertNumber(src->modulus, sizeof(src->modulus), n);
+	convertNumber(src->publicExponent, sizeof(src->publicExponent), e);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	rsa->n = n;
+	rsa->e = e;
+#else
+	RSA_set0_key(rsa, n, e, NULL);
+#endif
 
 	k->key = rsa;
 	return 0;
@@ -339,15 +368,27 @@ int eng_openssl_secret_key_export(IPRIV_KEY_BODY *dst, IPRIV_KEY *k)
 	if (!rsa || !dst|| k->type!=IPRIV_KEY_TYPE_RSA_SECRET)
 		return CRYPT_ERR_INVALID_KEY;
 
-	dst->bits = BN_num_bits(rsa->n);
+	const BIGNUM *n, *e, *d, *p, *q, *iqmp;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	n = rsa->n;
+	e = rsa->e;
+	d = rsa->d;
+	p = rsa->p;
+	q = rsa->q;
+	iqmp = rsa->iqmp;	
+#else
+	RSA_get0_key(rsa, &n, &e, &d);
+	RSA_get0_factors(rsa, &p, &q);
+	RSA_get0_crt_params(rsa, NULL, NULL, &iqmp);
+#endif
+	dst->bits = BN_num_bits(n);
 
-	convertNumber2(rsa->n, dst->modulus, sizeof(dst->modulus));
-	convertNumber2(rsa->e, dst->publicExponent, sizeof(dst->publicExponent));
-	convertNumber2(rsa->d, dst->exponent, sizeof(dst->exponent));
-	convertNumber2(rsa->q, dst->prime1, sizeof(dst->prime1));	// обратная перестановка !!
-	convertNumber2(rsa->p, dst->prime2, sizeof(dst->prime2));
-	convertNumber2(rsa->iqmp, dst->coefficient, sizeof(dst->coefficient));
-//	mp_inv(pKey->u, pKey->p, pKey->q);			/* (p*u) mod q = 1, assuming p<q */
+	convertNumber2(n, dst->modulus, sizeof(dst->modulus));
+	convertNumber2(e, dst->publicExponent, sizeof(dst->publicExponent));
+	convertNumber2(d, dst->exponent, sizeof(dst->exponent));
+	convertNumber2(q, dst->prime1, sizeof(dst->prime1));	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ !!
+	convertNumber2(p, dst->prime2, sizeof(dst->prime2));
+	convertNumber2(iqmp, dst->coefficient, sizeof(dst->coefficient));
 
 	return 0;
 }
@@ -358,10 +399,17 @@ int eng_openssl_public_key_export(IPRIV_KEY_BODY *dst, IPRIV_KEY *k)
 	if (!rsa || k->type!=IPRIV_KEY_TYPE_RSA_PUBLIC)
 		return CRYPT_ERR_INVALID_KEY;
 
-	dst->bits = BN_num_bits(rsa->n);
+	const BIGNUM *n = 0, *e = 0;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	n = rsa->n;
+	e = rsa->e;
+#else
+	RSA_get0_key(rsa, &n, &e, NULL);	
+#endif	
+	dst->bits = BN_num_bits(n);
 
-	convertNumber2(rsa->n, dst->modulus, sizeof(dst->modulus));
-	convertNumber2(rsa->e, dst->publicExponent, sizeof(dst->publicExponent));
+	convertNumber2(n, dst->modulus, sizeof(dst->modulus));
+	convertNumber2(e, dst->publicExponent, sizeof(dst->publicExponent));
 
 	return 0;
 }
@@ -380,8 +428,21 @@ int eng_openssl_genkey(IPRIV_KEY *sec, IPRIV_KEY *pub, int bits)
 {
 	if (!sec || !pub || !bits)
 		return CRYPT_ERR_INVALID_KEYLEN;
-
+	BIGNUM *n = 0, *e = 0;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	sec->key = RSA_generate_key(bits, 0x10001, 0, 0);
+#else
+	e = BN_new();
+	if (BN_set_word(e, RSA_F4) != 1)
+		return CRYPT_ERR_GENKEY;
+
+	RSA *tmp = RSA_new();
+	RSA_generate_key_ex(tmp, bits, e, NULL);
+	if (e)
+		BN_free(e);
+	sec->key = (void *)tmp;
+#endif
+
 	if (!sec->key)
 		return CRYPT_ERR_GENKEY;
 
@@ -392,16 +453,31 @@ int eng_openssl_genkey(IPRIV_KEY *sec, IPRIV_KEY *pub, int bits)
 		return CRYPT_ERR_OUT_OF_MEMORY;
 	}
 
-	rsa->n = BN_new();
-	rsa->e = BN_new();
-	if (!rsa->n || !rsa->e) {
+	e = BN_new();
+	n = BN_new();
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	rsa->n = n;
+	rsa->e = e;	
+#else
+	RSA_set0_key(rsa, n, e, NULL);
+#endif
+	if (!n || !e) {
 		RSA_free((RSA *) sec->key);
 		sec->key = 0;
 		RSA_free(rsa);
 		return CRYPT_ERR_OUT_OF_MEMORY;
 	}
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	BN_copy(rsa->n, ((RSA *) sec->key)->n);
 	BN_copy(rsa->e, ((RSA *) sec->key)->e);
+#else
+	const BIGNUM * secN = 0;
+	const BIGNUM * secE = 0;
+	RSA_get0_key((RSA *)sec->key, &secN, &secE, NULL);
+	BN_copy(n, secN);
+	BN_copy(e, secE);	
+#endif
 	pub->key = rsa;
 
 	return 0;
@@ -409,7 +485,11 @@ int eng_openssl_genkey(IPRIV_KEY *sec, IPRIV_KEY *pub, int bits)
 
 int eng_openssl_gen_random_bytes(unsigned char *dst, int ndst)
 {
-	if (RAND_pseudo_bytes(dst, ndst)>=0)	// или >=0, если разрешить не криптографически сильные rnd
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	if (RAND_pseudo_bytes(dst, ndst)>=0)	// пїЅпїЅпїЅ >=0, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ rnd
+#else
+	if (RAND_bytes(dst, ndst)>0)
+#endif	
 		return ndst;
 	else
 		return 0;

@@ -14,12 +14,12 @@ OPT_PKCS11              = false
 
 include config.mk
 
-CC	= gcc
+CC	= g++
 AR	= ar
 RM	= rm
 LIBNAME	= libipriv
-LINK	= gcc
-FLAGS	+= -O2 -Iidea -I. -DIDEA32 -fno-stack-protector -fPIC -Irfc6234
+LINK	= g++
+FLAGS	+= -O2 -Iidea -I. -DIDEA32 -fPIC -Irfc6234
 LIBS	= -ldl
 
 OBJS	= rsaref/rsa.o rsaref/nn.o rsaref/digit.o rsaref/r_stdlib.o rsaref/prime.o rsaref/r_random.o \
@@ -58,7 +58,7 @@ FLAGS+=-DWITH_2048_KEYS
 endif
 
 CFLAGS	= -x c $(FLAGS)
-CPPFLAGS= -fno-exceptions -fno-rtti $(FLAGS)
+CPPFLAGS= $(FLAGS)
 
 
 all: static
@@ -114,3 +114,7 @@ genkey:
 
 benchmark:
 	g++ -o bench -pthread -L. benchmark.cpp -lipriv -lcrypto -lssl
+
+clean:
+	rm -f $(OBJS) $(LIBNAME).so $(LIBNAME).a
+

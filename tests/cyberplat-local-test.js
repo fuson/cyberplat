@@ -22,13 +22,13 @@ describe("Cyberplat local", function() {
 
     server.listen(port);
 
-
     it("check create", function(done) {
         var cyberplat = new Cyberplat({
             crypto: {
-                libPath: './tests/libipriv',
                 secretKey: './tests/secret.key',
-                secretPhrase: '1111111111'   //password
+                secretPhrase: '1111111111',   //password
+	            publicKey: "./tests/pubkeys.key",
+	            publicSerial: 64182       // serial number of cyberplat key
             },
             settings: {
                 SD: 17031,
@@ -65,7 +65,7 @@ describe("Cyberplat local", function() {
 
             cyberplat.pay("local", obj, function(answer) {
                 //console.log("pay answer", answer)
-
+                
                 assert.equal(answer.ERROR, "1");
                 assert.equal(answer.RESULT, "1");
             

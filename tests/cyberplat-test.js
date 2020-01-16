@@ -7,9 +7,10 @@ describe("Cyberplat", function() {
     it("check create", function(done) {
         var cyberplat = new Cyberplat({
             crypto: {
-                libPath: './tests/libipriv',
                 secretKey: './tests/secret.key',
-                secretPhrase: '1111111111'   //password
+                secretPhrase: '1111111111',   //password
+                publicKey: './tests/pubkeys.key',
+                publicSerial: 64182       // serial number of cyberplat key
             },
             settings: {
                 AP: 1,
@@ -53,7 +54,9 @@ describe("Cyberplat", function() {
             crypto: {
                 libPath: './tests/libipriv',
                 secretKey: './tests/secret.key',
-                secretPhrase: '1111111111'   //password
+                secretPhrase: '1111111111',   //password
+	            publicKey: "./tests/pubkeys.key",
+	            publicSerial: 64182       // serial number of cyberplat key
             },
             settings: {
                 SD: 17031,
@@ -61,15 +64,15 @@ describe("Cyberplat", function() {
                 OP: 17034,
             },
             providers: {
-                "227": {
-                    payCheck: 'https://service.cyberplat.ru/cgi-bin/t2/t2_pay_check.cgi',
-                    pay: 'https://service.cyberplat.ru/cgi-bin/t2/t2_pay.cgi',
-                    payStatus: 'https://service.cyberplat.ru/cgi-bin/es/es_pay_status.cgi'
+                "2": {
+                    payCheck: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay_check.cgi',
+                    pay: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay.cgi',
+                    payStatus: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay_status.cgi'
                 },
-                "180": {
-                    payCheck: 'https://service.cyberplat.ru/cgi-bin/t2/t2_pay_check.cgi',
-                    pay: 'https://service.cyberplat.ru/cgi-bin/t2/t2_pay.cgi',
-                    payStatus: 'https://service.cyberplat.ru/cgi-bin/es/es_pay_status.cgi'
+                "227": {
+                    payCheck: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay_check.cgi',
+                    pay: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay.cgi',
+                    payStatus: 'https://ru-demo.cyberplat.com/cgi-bin/es/es_pay_status.cgi'
                 }
             }
         });
@@ -82,11 +85,11 @@ describe("Cyberplat", function() {
             TERM_ID: "1",
             NUMBER: "8888888888",
             REQ_TYPE: 0,
-            SESSION: "4b34d1d400000cb80029"
+            SESSION: cyberplat.generateNewSession()
         };
 
         cyberplat.payCheck("227", obj, function(answer) {
-//            console.log(answer);
+            console.log("answer 227:", answer);
             done();
         });
 
